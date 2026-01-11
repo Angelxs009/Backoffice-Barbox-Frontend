@@ -1,0 +1,8 @@
+.marca-form-page { width:100%; }
+
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.logo-field { display:flex; flex-direction:column; gap:0.5rem; }
+.logo-preview img { max-width:160px; border-radius:6px; border:1px solid var(--color-borde); }
+.form-actions { display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1rem; }
+
+@media (max-width:768px) { .grid-2 { grid-template-columns:1fr; } .form-actions { flex-direction:column-reverse; } }

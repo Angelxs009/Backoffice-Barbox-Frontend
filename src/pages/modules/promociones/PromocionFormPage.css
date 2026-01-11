@@ -1,0 +1,12 @@
+.promocion-form-page { width:100%; }
+
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.full-width { grid-column:1 / -1; }
+.dates-grid { display:flex; gap:0.75rem; }
+.productos-list { display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem; }
+.producto-item { display:inline-flex; align-items:center; gap:0.5rem; padding:0.4rem 0.6rem; border-radius:6px; border:1px solid var(--color-borde); background:var(--color-fondo-navbar); }
+.producto-item.selected { background:linear-gradient(135deg, rgba(199,80,64,0.08), rgba(42,23,22,0.02)); border-color:var(--color-secundario); }
+
+.form-actions { display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1rem; }
+
+@media (max-width:768px) { .grid-2 { grid-template-columns:1fr; } .form-actions { flex-direction:column-reverse; } }

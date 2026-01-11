@@ -1,38 +1,184 @@
-.App {
-  text-align: center;
+/* Import Font Awesome y Google Fonts */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap');
+
+/* Variables CSS para BARBOX Backoffice */
+:root {
+  /* Colores */
+  --color-principal: #2A1716;        /* vino oscuro - títulos, sidebar, textos importantes */
+  --color-secundario: #C75040;       /* rojo terracota - botones principales, acciones */
+  --color-hover: #AA3A2E;            /* hover de botones */
+  --color-texto-secundario: #4A4545; /* textos secundarios, descripciones */
+  --color-fondo-navbar: #F6EDE7;     /* fondo crema para navbar/sidebar */
+  --color-borde: #E3D6D2;            /* bordes sutiles */
+  --color-fondo: #FFFFFF;            /* fondo principal */
+  --color-success: #28a745;          /* verde para éxito */
+  --color-warning: #ffc107;          /* amarillo para advertencias */
+  --color-danger: #dc3545;           /* rojo para errores */
+  --color-info: #17a2b8;             /* azul para información */
+  
+  /* Fuentes */
+  --font-principal: 'Montserrat', sans-serif;
+  --font-titulos: 'Playfair Display', serif;
+  
+  /* Breakpoints */
+  --breakpoint-xl: 1024px;
+  --breakpoint-lg: 768px;
+  --breakpoint-md: 480px;
+  --breakpoint-sm: 360px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Reset CSS */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+/* Estilos base */
+body {
+  font-family: var(--font-principal);
+  background-color: var(--color-fondo);
+  color: var(--color-principal);
+  line-height: 1.6;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-titulos);
+  font-weight: 700;
+  color: var(--color-principal);
+  margin-bottom: 1rem;
+}
+
+/* Container principal */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  width: 100%;
+}
+
+/* Botón principal con gradient */
+.btn--primary {
+  background: linear-gradient(135deg, var(--color-secundario) 0%, var(--color-hover) 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-family: var(--font-principal);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(199, 80, 64, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn--primary:hover {
+  background: linear-gradient(135deg, var(--color-hover) 0%, #8B2E22 100%);
+  box-shadow: 0 6px 12px rgba(199, 80, 64, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn--primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(199, 80, 64, 0.2);
+}
+
+.btn--primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Responsive Breakpoints */
+
+/* Desktop large (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 960px;
+    padding: 0 1.25rem;
+  }
+  
+  body {
+    font-size: 15px;
   }
 }
 
-.App-header {
-  background-color: #282c34;
+/* Tablet (max-width: 768px) */
+@media (max-width: 768px) {
+  .container {
+    max-width: 720px;
+    padding: 0 1rem;
+  }
+  
+  body {
+    font-size: 14px;
+  }
+  
+  .btn--primary {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.95rem;
+  }
+  
+  h1 {
+    font-size: 1.75rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.75rem;
+  }
+  
+  body {
+    font-size: 14px;
+  }
+  
+  .btn--primary {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Mobile small (max-width: 360px) */
+@media (max-width: 360px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+  
+  body {
+    font-size: 13px;
+  }
+  
+  .btn--primary {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* App Component Styles */
+.App {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }

@@ -1,0 +1,22 @@
+.bodegas-list-page {
+  width: 100%;
+}
+
+.bodegas-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.bodegas-table {
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .bodegas-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+}

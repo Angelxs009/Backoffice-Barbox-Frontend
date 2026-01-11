@@ -1,0 +1,72 @@
+.facturas-list-page {
+  width: 100%;
+}
+
+.facturas-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.facturas-filters {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  border: 2px solid var(--color-borde);
+  background: var(--color-fondo);
+}
+
+.facturas-table {
+  margin-top: 1rem;
+}
+
+.factura-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.factura-meta p {
+  margin: 0.25rem 0;
+}
+
+.table-bordered {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid var(--color-borde);
+  padding: 0.6rem 0.75rem;
+}
+
+.table-bordered thead th {
+  background: var(--color-fondo-navbar);
+  text-align: left;
+}
+
+.table-bordered tfoot td {
+  font-weight: 700;
+}
+
+.text-right {
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .facturas-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .facturas-filters {
+    flex-wrap: wrap;
+  }
+}

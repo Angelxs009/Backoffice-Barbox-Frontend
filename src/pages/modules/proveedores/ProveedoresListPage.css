@@ -1,0 +1,9 @@
+.proveedores-list-page { width:100%; }
+
+.proveedores-actions { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1rem; }
+
+.proveedores-search { display:flex; gap:0.5rem; align-items:center; }
+
+.proveedores-table { margin-top:1rem; }
+
+@media (max-width:768px) { .proveedores-actions { flex-direction:column; align-items:stretch; } .proveedores-search { flex-wrap:wrap; } }

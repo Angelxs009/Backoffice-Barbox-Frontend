@@ -1,0 +1,7 @@
+.promociones-list-page { width:100%; }
+
+.promociones-actions { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+
+.promociones-table { margin-top:1rem; }
+
+@media (max-width:768px) { .promociones-actions { flex-direction:column; align-items:stretch; } }
