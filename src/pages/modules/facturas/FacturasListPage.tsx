@@ -25,6 +25,7 @@ const FacturasListPage: React.FC = () => {
   const [selected, setSelected] = useState<Factura | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAnularConfirm, setShowAnularConfirm] = useState(false); // F5.2: Confirmación de anulación
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
 
   useEffect(() => {
@@ -73,10 +74,7 @@ const FacturasListPage: React.FC = () => {
     navigate(`/facturas/editar/${f.id_factura}`);
   };
 
-  const handleDelete = (f: Factura) => {
-    setSelected(f);
-    setShowDeleteConfirm(true);
-  };
+  // Función de eliminar eliminada - usamos anular en su lugar (F5.2)
 
   const confirmDelete = async () => {
     if (!selected) return;
@@ -90,16 +88,38 @@ const FacturasListPage: React.FC = () => {
     }
   };
 
+  /**
+   * F5.2: Anular factura (solo PENDIENTE)
+   */
+  const handleAnular = (f: Factura) => {
+    setSelected(f);
+    setShowAnularConfirm(true);
+  };
+
+  const confirmAnular = async () => {
+    if (!selected) return;
+    try {
+      await facturaService.anularFactura(selected.id_factura);
+      setToast({ message: 'Factura anulada exitosamente', type: 'success' });
+      setShowAnularConfirm(false);
+      setSelected(null);
+      loadFacturas();
+    } catch (error: any) {
+      setToast({ message: error.message || 'Error anulando factura', type: 'error' });
+    }
+  };
+
   const handleCreate = () => {
     navigate('/facturas/nueva');
   };
 
   const columns = [
     { key: 'numero_factura', label: 'Número', width: '160px' },
-    { key: 'cliente', label: 'Cliente', width: '260px' },
+    { key: 'cliente', label: 'Cliente', width: '200px' },
     { key: 'fecha_emision', label: 'Fecha', width: '140px' },
-    { key: 'total', label: 'Total', width: '120px', align: 'right' as const },
-    { key: 'estado_pago', label: 'Estado Pago', width: '140px', align: 'center' as const },
+    { key: 'total', label: 'Total', width: '100px', align: 'right' as const },
+    { key: 'estadoBadge', label: 'Estado Pago', width: '120px', align: 'center' as const },
+    { key: 'acciones', label: 'Acciones', width: '180px', align: 'center' as const },
   ];
 
   const tableData = facturas.map((f) => ({
@@ -107,10 +127,22 @@ const FacturasListPage: React.FC = () => {
     cliente: f.cliente ? `${f.cliente.nombres} ${f.cliente.apellidos}` : f.id_cliente,
     fecha_emision: new Date(f.fecha_emision).toLocaleDateString(),
     total: `$${f.total.toFixed(2)}`,
-    estado_pago: (
+    estadoBadge: (
       <span className={`badge ${f.estado_pago === 'PAGADA' ? 'badge--success' : f.estado_pago === 'PENDIENTE' ? 'badge--warning' : 'badge--danger'}`}>
         {f.estado_pago}
       </span>
+    ),
+    acciones: (
+      <div className="facturas-acciones-cell">
+        <Button variant="outline" size="small" onClick={() => handleView(f)}>Ver</Button>
+        {/* F5.2/F5.3: Solo PENDIENTE puede editarse o anularse */}
+        {f.estado_pago === 'PENDIENTE' && (
+          <>
+            <Button variant="secondary" size="small" onClick={() => handleEdit(f)}>Editar</Button>
+            <Button variant="danger" size="small" onClick={() => handleAnular(f)}>Anular</Button>
+          </>
+        )}
+      </div>
     ),
   }));
 
@@ -141,7 +173,7 @@ const FacturasListPage: React.FC = () => {
         </div>
 
         <div className="facturas-table">
-          <Table columns={columns} data={tableData} loading={loading} emptyMessage="No hay facturas" onView={handleView} onEdit={handleEdit} onDelete={handleDelete} />
+          <Table columns={columns} data={tableData} loading={loading} emptyMessage="No hay facturas" />
         </div>
       </Card>
 
@@ -204,6 +236,25 @@ const FacturasListPage: React.FC = () => {
       {showDeleteConfirm && selected && (
         <Modal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Confirmar eliminación" size="small" footer={<><Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>Cancelar</Button><Button variant="danger" onClick={confirmDelete}>Eliminar</Button></>}>
           <p>¿Eliminar factura <strong>{selected.numero_factura}</strong>?</p>
+        </Modal>
+      )}
+
+      {/* F5.2: Modal confirmación de anulación */}
+      {showAnularConfirm && selected && (
+        <Modal 
+          isOpen={showAnularConfirm} 
+          onClose={() => setShowAnularConfirm(false)} 
+          title="Confirmar anulación" 
+          size="small" 
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setShowAnularConfirm(false)}>Cancelar</Button>
+              <Button variant="danger" onClick={confirmAnular}>Anular Factura</Button>
+            </>
+          }
+        >
+          <p>¿Está seguro que desea anular la factura <strong>{selected.numero_factura}</strong>?</p>
+          <p className="text-muted">Esta acción no se puede deshacer.</p>
         </Modal>
       )}
 

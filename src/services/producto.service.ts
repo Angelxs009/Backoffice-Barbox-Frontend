@@ -79,6 +79,7 @@ class ProductoService {
 
   /**
    * Crear un nuevo producto
+   * F6.1: Valida codigo_barras único y precio positivo
    */
   async createProducto(data: ProductoFormData): Promise<Producto> {
     await simulateDelay();
@@ -86,8 +87,25 @@ class ProductoService {
     
     const productos = getFromStorage<Producto>(STORAGE_KEYS.PRODUCTOS);
     
+    // F6.1 E3: Validar campos obligatorios
+    if (!data.codigo_barras || !data.nombre || data.precio === undefined) {
+      throw new Error('Complete todos los campos requeridos.');
+    }
+    
+    // F6.1 E4: Validar precio positivo
+    if (data.precio <= 0) {
+      throw new Error('El precio debe ser un valor numérico positivo.');
+    }
+    
+    // F6.1 E2: Validar codigo_barras único (solo entre productos ACT)
+    const existente = productos.find(p => p.codigo_barras === data.codigo_barras && p.estado === true);
+    if (existente) {
+      throw new Error('El identificador del producto ya existe.');
+    }
+    
     const nuevoProducto: Producto = {
       id_producto: generateId('prod'),
+      codigo_barras: data.codigo_barras,
       nombre: data.nombre,
       descripcion: data.descripcion || '',
       precio: data.precio,
@@ -96,7 +114,7 @@ class ProductoService {
       subcategoria: data.subcategoria || '',
       marca: data.marca || '',
       imagen_url: data.imagen_url || '',
-      estado: true,
+      estado: true, // ACT
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -109,6 +127,7 @@ class ProductoService {
 
   /**
    * Actualizar un producto existente
+   * F6.2: Solo productos ACT, codigo_barras no modificable
    */
   async updateProducto(id: string, data: ProductoFormData): Promise<Producto> {
     await simulateDelay();
@@ -117,13 +136,32 @@ class ProductoService {
     const productos = getFromStorage<Producto>(STORAGE_KEYS.PRODUCTOS);
     const index = productos.findIndex(p => p.id_producto === id);
     
+    // F6.2 E2: Producto no encontrado
     if (index === -1) {
-      throw new Error('Producto no encontrado');
+      throw new Error('El producto especificado no existe.');
     }
     
+    // F6.2: Solo productos ACT pueden modificarse
+    if (!productos[index].estado) {
+      throw new Error('El producto se encuentra deshabilitado y no puede modificarse.');
+    }
+    
+    // F6.2 E4: Validar precio positivo
+    if (data.precio !== undefined && data.precio <= 0) {
+      throw new Error('El precio debe ser un valor numérico positivo.');
+    }
+    
+    // F6.2: Mantener codigo_barras original (no modificable)
     productos[index] = {
       ...productos[index],
-      ...data,
+      nombre: data.nombre || productos[index].nombre,
+      descripcion: data.descripcion ?? productos[index].descripcion,
+      precio: data.precio ?? productos[index].precio,
+      stock: data.stock ?? productos[index].stock,
+      categoria: data.categoria || productos[index].categoria,
+      subcategoria: data.subcategoria || productos[index].subcategoria,
+      marca: data.marca || productos[index].marca,
+      imagen_url: data.imagen_url ?? productos[index].imagen_url,
       updatedAt: new Date().toISOString(),
     };
     
@@ -132,8 +170,8 @@ class ProductoService {
   }
 
   /**
-   * Eliminar un producto (ELIMINACIÓN LÓGICA - cambia estado a false)
-   * El producto NO se elimina, solo se marca como inactivo
+   * Eliminar un producto (ELIMINACIÓN LÓGICA - cambia estado a INA)
+   * F6.3: Cambio de estado ACT -> INA
    */
   async deleteProducto(id: string): Promise<void> {
     await simulateDelay();
@@ -142,11 +180,17 @@ class ProductoService {
     const productos = getFromStorage<Producto>(STORAGE_KEYS.PRODUCTOS);
     const index = productos.findIndex(p => p.id_producto === id);
     
+    // F6.3 E2: Producto no encontrado
     if (index === -1) {
-      throw new Error('Producto no encontrado');
+      throw new Error('El producto no existe.');
     }
     
-    // ELIMINACIÓN LÓGICA: Solo cambiar estado a false
+    // F6.3 E3: Producto ya inactivo
+    if (!productos[index].estado) {
+      throw new Error('El producto ya se encuentra deshabilitado.');
+    }
+    
+    // ELIMINACIÓN LÓGICA: Cambiar estado a INA (false)
     productos[index].estado = false;
     productos[index].updatedAt = new Date().toISOString();
     

@@ -74,6 +74,7 @@ export const MOCK_CLIENTES: Cliente[] = [
 export const MOCK_PRODUCTOS: Producto[] = [
   {
     id_producto: 'prod-001',
+    codigo_barras: '7891234567890',
     nombre: 'Johnnie Walker Red Label 750ml',
     descripcion: 'Whisky escocés blended, 750ml',
     precio: 28.50,
@@ -88,6 +89,7 @@ export const MOCK_PRODUCTOS: Producto[] = [
   },
   {
     id_producto: 'prod-002',
+    codigo_barras: '7891234567891',
     nombre: 'Johnnie Walker Black Label 750ml',
     descripcion: 'Whisky escocés blended premium, 750ml',
     precio: 45.00,
@@ -102,6 +104,7 @@ export const MOCK_PRODUCTOS: Producto[] = [
   },
   {
     id_producto: 'prod-003',
+    codigo_barras: '7501234567892',
     nombre: 'Absolut Original 750ml',
     descripcion: 'Vodka sueco premium, 750ml',
     precio: 22.00,
@@ -116,6 +119,7 @@ export const MOCK_PRODUCTOS: Producto[] = [
   },
   {
     id_producto: 'prod-004',
+    codigo_barras: '7501234567893',
     nombre: 'Bacardí Superior 750ml',
     descripcion: 'Ron blanco caribeño, 750ml',
     precio: 18.50,
@@ -130,6 +134,7 @@ export const MOCK_PRODUCTOS: Producto[] = [
   },
   {
     id_producto: 'prod-005',
+    codigo_barras: '7501234567894',
     nombre: 'José Cuervo Especial 750ml',
     descripcion: 'Tequila reposado mexicano, 750ml',
     precio: 24.00,

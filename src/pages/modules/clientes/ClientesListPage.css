@@ -8,9 +8,33 @@
 .clientes-list__actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 1.5rem;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+/* Estado Filter Select */
+.clientes-list__estado-filter {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  background-color: var(--color-fondo-tarjeta);
+  color: var(--color-texto-principal);
+  font-size: 0.9rem;
+  min-width: 160px;
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.clientes-list__estado-filter:hover {
+  border-color: var(--color-secundario);
+}
+
+.clientes-list__estado-filter:focus {
+  outline: none;
+  border-color: var(--color-secundario);
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.1);
 }
 
 /* Table Container */

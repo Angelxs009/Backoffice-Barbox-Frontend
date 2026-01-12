@@ -17,6 +17,7 @@ const ClientesListPage: React.FC = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [estadoFilter, setEstadoFilter] = useState<string>(''); // '' = todos, 'ACT' = activos, 'INA' = inactivos
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
@@ -25,18 +26,28 @@ const ClientesListPage: React.FC = () => {
     type: 'success' | 'error' | 'warning' | 'info';
   } | null>(null);
 
-  // Cargar clientes al montar el componente
+  // Cargar clientes al montar el componente o cambiar filtro de estado
   useEffect(() => {
     loadClientes();
-  }, []);
+  }, [estadoFilter]);
 
   /**
    * Cargar lista de clientes
+   * F4.4: Consulta con filtro de estado (ACT/INA)
    */
   const loadClientes = async () => {
     try {
       setLoading(true);
-      const data = await clienteService.getClientes();
+      const filters: { estado?: boolean } = {};
+      
+      // F4.4.2: Filtrar por estado si está seleccionado
+      if (estadoFilter === 'ACT') {
+        filters.estado = true;
+      } else if (estadoFilter === 'INA') {
+        filters.estado = false;
+      }
+      
+      const data = await clienteService.getClientes(filters);
       setClientes(data);
     } catch (error: any) {
       setToast({
@@ -175,6 +186,18 @@ const ClientesListPage: React.FC = () => {
             onSearch={handleSearch}
             placeholder="Buscar por cédula, nombre, correo..."
           />
+          
+          {/* F4.4.2: Filtro por estado */}
+          <select
+            className="clientes-list__estado-filter"
+            value={estadoFilter}
+            onChange={(e) => setEstadoFilter(e.target.value)}
+          >
+            <option value="">Todos los estados</option>
+            <option value="ACT">Activos (ACT)</option>
+            <option value="INA">Inactivos (INA)</option>
+          </select>
+          
           <Button
             variant="primary"
             icon="plus"

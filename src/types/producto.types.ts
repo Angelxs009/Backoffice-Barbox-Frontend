@@ -2,6 +2,7 @@
 
 export interface Producto {
   id_producto: string;
+  codigo_barras: string; // Identificador único del producto (F6)
   nombre: string;
   descripcion: string;
   precio: number;
@@ -10,12 +11,13 @@ export interface Producto {
   subcategoria: string;
   marca: string;
   imagen_url: string;
-  estado: boolean;
+  estado: boolean; // true = ACT, false = INA
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ProductoFormData {
+  codigo_barras: string; // Requerido y único
   nombre: string;
   descripcion: string;
   precio: number;

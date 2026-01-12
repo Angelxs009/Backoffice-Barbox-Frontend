@@ -18,6 +18,7 @@ const ProductoFormPage: React.FC<ProductoFormPageProps> = ({ mode }) => {
 
   // Estado
   const [formData, setFormData] = useState<ProductoFormData>({
+    codigo_barras: '', // F6: Identificador único del producto
     nombre: '',
     descripcion: '',
     precio: 0,
@@ -33,6 +34,7 @@ const ProductoFormPage: React.FC<ProductoFormPageProps> = ({ mode }) => {
   const [submitLoading, setSubmitLoading] = useState<boolean>(false);
   const [uploadingImage, setUploadingImage] = useState<boolean>(false);
   const [categorias, setCategorias] = useState<string[]>([]);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false); // F6.2: codigo_barras no editable
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'warning' | 'info';
@@ -66,6 +68,7 @@ const ProductoFormPage: React.FC<ProductoFormPageProps> = ({ mode }) => {
       setLoading(true);
       const producto = await productoService.getProductoById(productoId);
       setFormData({
+        codigo_barras: producto.codigo_barras || '', // F6.2: No editable
         nombre: producto.nombre,
         descripcion: producto.descripcion,
         precio: producto.precio,
@@ -75,6 +78,7 @@ const ProductoFormPage: React.FC<ProductoFormPageProps> = ({ mode }) => {
         marca: producto.marca,
         imagen_url: producto.imagen_url,
       });
+      setIsEditMode(true); // F6.2: Marcar como modo edición
     } catch (error: any) {
       setToast({
         message: error.message || 'Error al cargar el producto',
@@ -88,9 +92,15 @@ const ProductoFormPage: React.FC<ProductoFormPageProps> = ({ mode }) => {
 
   /**
    * Validar formulario
+   * F6.1: Validaciones de campos requeridos
    */
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+
+    // F6.1: Código de barras requerido (solo en creación)
+    if (!isEditMode && !formData.codigo_barras.trim()) {
+      newErrors.codigo_barras = 'El código de barras es requerido';
+    }
 
     // Nombre: requerido
     if (!formData.nombre.trim()) {
@@ -102,9 +112,9 @@ const ProductoFormPage: React.FC<ProductoFormPageProps> = ({ mode }) => {
       newErrors.descripcion = 'La descripción es requerida';
     }
 
-    // Precio: mayor a 0
+    // F6.1 E4: Precio: mayor a 0
     if (formData.precio <= 0) {
-      newErrors.precio = 'El precio debe ser mayor a 0';
+      newErrors.precio = 'El precio debe ser un valor numérico positivo';
     }
 
     // Stock: mayor o igual a 0
@@ -127,10 +137,7 @@ const ProductoFormPage: React.FC<ProductoFormPageProps> = ({ mode }) => {
       newErrors.marca = 'La marca es requerida';
     }
 
-    // Imagen URL: requerida
-    if (!formData.imagen_url.trim()) {
-      newErrors.imagen_url = 'La URL de la imagen es requerida';
-    }
+    // Imagen URL: opcional (removida validación requerida)
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -285,6 +292,20 @@ const ProductoFormPage: React.FC<ProductoFormPageProps> = ({ mode }) => {
       <Card>
         <form onSubmit={handleSubmit} className="producto-form">
           <div className="producto-form__grid">
+            {/* F6: Código de Barras - Solo editable en creación */}
+            <Input
+              label="Código de Barras"
+              type="text"
+              name="codigo_barras"
+              value={formData.codigo_barras}
+              onChange={handleInputChange}
+              placeholder="Ej: 7891234567890"
+              icon="barcode"
+              error={errors.codigo_barras}
+              disabled={isEditMode} // F6.2: No editable en modo edición
+              required={!isEditMode}
+            />
+
             {/* Nombre */}
             <Input
               label="Nombre del Producto"

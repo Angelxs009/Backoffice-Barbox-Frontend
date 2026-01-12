@@ -27,6 +27,7 @@ const ProductosListPage: React.FC = () => {
     categoria: '',
     precioMin: '',
     precioMax: '',
+    estado: '', // '' = todos, 'ACT' = activos, 'INA' = inactivos (F6.4.2)
   });
   const [toast, setToast] = useState<{
     message: string;
@@ -71,9 +72,10 @@ const ProductosListPage: React.FC = () => {
 
   /**
    * Buscar productos
+   * F6.4: Consulta con filtros (categoría, precio, estado)
    */
   const handleSearch = async () => {
-    if (!searchQuery.trim() && !filters.categoria && !filters.precioMin && !filters.precioMax) {
+    if (!searchQuery.trim() && !filters.categoria && !filters.precioMin && !filters.precioMax && !filters.estado) {
       loadProductos();
       return;
     }
@@ -81,12 +83,19 @@ const ProductosListPage: React.FC = () => {
     try {
       setLoading(true);
       
-      const productosFilters = {
+      const productosFilters: any = {
         busqueda: searchQuery || undefined,
         categoria: filters.categoria || undefined,
         precioMin: filters.precioMin ? parseFloat(filters.precioMin) : undefined,
         precioMax: filters.precioMax ? parseFloat(filters.precioMax) : undefined,
       };
+      
+      // F6.4.2: Filtro por estado
+      if (filters.estado === 'ACT') {
+        productosFilters.estado = true;
+      } else if (filters.estado === 'INA') {
+        productosFilters.estado = false;
+      }
 
       const data = await productoService.getProductos(productosFilters);
       setProductos(data);
@@ -116,6 +125,7 @@ const ProductosListPage: React.FC = () => {
       categoria: '',
       precioMin: '',
       precioMax: '',
+      estado: '',
     });
     loadProductos();
   };
@@ -207,12 +217,13 @@ const ProductosListPage: React.FC = () => {
 
   const tableColumns = [
     { key: 'imagenThumb', label: 'Imagen', width: '80px', align: 'center' as const },
-    { key: 'nombre', label: 'Nombre', width: '220px' },
-    { key: 'categoria', label: 'Categoría', width: '150px' },
-    { key: 'marca', label: 'Marca', width: '130px' },
-    { key: 'precioFormateado', label: 'Precio', width: '100px', align: 'right' as const },
-    { key: 'stockBadge', label: 'Stock', width: '100px', align: 'center' as const },
-    { key: 'estadoBadge', label: 'Estado', width: '110px', align: 'center' as const },
+    { key: 'codigo_barras', label: 'Código', width: '130px' },
+    { key: 'nombre', label: 'Nombre', width: '200px' },
+    { key: 'categoria', label: 'Categoría', width: '130px' },
+    { key: 'marca', label: 'Marca', width: '110px' },
+    { key: 'precioFormateado', label: 'Precio', width: '90px', align: 'right' as const },
+    { key: 'stockBadge', label: 'Stock', width: '90px', align: 'center' as const },
+    { key: 'estadoBadge', label: 'Estado', width: '100px', align: 'center' as const },
   ];
 
   return (
@@ -270,6 +281,20 @@ const ProductosListPage: React.FC = () => {
                   {categorias.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
+                </select>
+              </div>
+              
+              {/* F6.4.2: Filtro por estado */}
+              <div className="filter-field">
+                <label>Estado</label>
+                <select
+                  value={filters.estado}
+                  onChange={(e) => setFilters({ ...filters, estado: e.target.value })}
+                  className="filter-select"
+                >
+                  <option value="">Todos los estados</option>
+                  <option value="ACT">Activos (ACT)</option>
+                  <option value="INA">Inactivos (INA)</option>
                 </select>
               </div>
               

@@ -81,6 +81,7 @@ class FacturaService {
 
   /**
    * Crear una nueva factura
+   * F5.1: Validación de cliente y productos
    */
   async createFactura(data: Partial<Factura>): Promise<Factura> {
     await simulateDelay();
@@ -88,17 +89,27 @@ class FacturaService {
     
     const facturas = getFromStorage<Factura>(STORAGE_KEYS.FACTURAS);
     
+    // F5.1 E3: Validar cliente seleccionado
+    if (!data.id_cliente) {
+      throw new Error('Debe seleccionar un cliente para la factura.');
+    }
+    
+    // F5.1 E4: Validar que haya al menos un producto
+    if (!data.detalles || data.detalles.length === 0) {
+      throw new Error('Debe agregar al menos un producto a la factura.');
+    }
+    
     const nuevaFactura: Factura = {
       id_factura: generateId('fac'),
       numero_factura: this.generateNumeroFactura(),
-      id_cliente: data.id_cliente || '',
+      id_cliente: data.id_cliente,
       fecha_emision: new Date().toISOString(),
       subtotal: data.subtotal || 0,
       iva: data.iva || 0,
       total: data.total || 0,
       estado_pago: 'PENDIENTE' as EstadoPago,
       metodo_pago: data.metodo_pago || 'Efectivo',
-      detalles: data.detalles || [],
+      detalles: data.detalles,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -111,7 +122,7 @@ class FacturaService {
 
   /**
    * Actualizar una factura existente
-   * SOLO se puede modificar si está PENDIENTE
+   * F5.3: SOLO se puede modificar si está PENDIENTE
    */
   async updateFactura(id: string, data: Partial<Factura>): Promise<Factura> {
     await simulateDelay();
@@ -120,13 +131,14 @@ class FacturaService {
     const facturas = getFromStorage<Factura>(STORAGE_KEYS.FACTURAS);
     const index = facturas.findIndex(f => f.id_factura === id);
     
+    // F5.3 E2: Factura no encontrada
     if (index === -1) {
-      throw new Error('Factura no encontrada');
+      throw new Error('La factura especificada no existe.');
     }
     
-    // Solo permitir modificar facturas PENDIENTES
+    // F5.3 E3: Solo permitir modificar facturas PENDIENTES
     if (facturas[index].estado_pago !== 'PENDIENTE') {
-      throw new Error('Solo se pueden modificar facturas en estado PENDIENTE');
+      throw new Error('Solo se pueden modificar facturas en estado PENDIENTE.');
     }
     
     facturas[index] = {
@@ -163,6 +175,7 @@ class FacturaService {
 
   /**
    * Anular una factura específicamente
+   * F5.2: Solo facturas PENDIENTE pueden anularse
    */
   async anularFactura(id: string): Promise<Factura> {
     await simulateDelay();
@@ -171,12 +184,18 @@ class FacturaService {
     const facturas = getFromStorage<Factura>(STORAGE_KEYS.FACTURAS);
     const index = facturas.findIndex(f => f.id_factura === id);
     
+    // F5.2 E2: Factura no encontrada
     if (index === -1) {
-      throw new Error('Factura no encontrada');
+      throw new Error('La factura especificada no existe.');
     }
     
+    // F5.2 E3: Solo PENDIENTE puede anularse
     if (facturas[index].estado_pago === 'ANULADA') {
-      throw new Error('La factura ya está anulada');
+      throw new Error('La factura ya se encuentra anulada.');
+    }
+    
+    if (facturas[index].estado_pago === 'PAGADA') {
+      throw new Error('No se puede anular una factura que ya ha sido pagada.');
     }
     
     facturas[index].estado_pago = 'ANULADA' as EstadoPago;

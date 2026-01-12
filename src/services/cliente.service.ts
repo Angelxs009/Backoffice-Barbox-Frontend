@@ -8,7 +8,6 @@ import {
   generateId,
   simulateDelay,
   initializeMockData,
-  MOCK_CLIENTES,
 } from '../utils/mockData';
 
 // Inicializar datos mock si no existen
@@ -68,6 +67,7 @@ class ClienteService {
 
   /**
    * Crear un nuevo cliente
+   * F4.1: Validación de cédula única y campos obligatorios
    */
   async createCliente(data: ClienteFormData): Promise<Cliente> {
     await simulateDelay();
@@ -75,9 +75,19 @@ class ClienteService {
     
     const clientes = getFromStorage<Cliente>(STORAGE_KEYS.CLIENTES);
     
-    // Validar cédula única
-    if (clientes.some(c => c.cedula === data.cedula)) {
-      throw new Error('Ya existe un cliente con esa cédula');
+    // F4.1 E4: Validar campos obligatorios
+    if (!data.cedula || !data.nombres || !data.apellidos) {
+      throw new Error('Complete todos los campos requeridos.');
+    }
+    
+    // F4.1 E3: Validar formato de cédula (10 dígitos)
+    if (!/^\d{10}$/.test(data.cedula)) {
+      throw new Error('La cédula ingresada no es válida.');
+    }
+    
+    // F4.1 E2: Validar cédula única
+    if (clientes.some(c => c.cedula === data.cedula && c.estado === true)) {
+      throw new Error('La cédula ya está registrada.');
     }
     
     const nuevoCliente: Cliente = {
@@ -85,11 +95,11 @@ class ClienteService {
       cedula: data.cedula,
       nombres: data.nombres,
       apellidos: data.apellidos,
-      correo: data.correo,
-      telefono: data.telefono,
-      direccion: data.direccion,
+      correo: data.correo || '',
+      telefono: data.telefono || '',
+      direccion: data.direccion || '',
       fecha_registro: new Date().toISOString().split('T')[0],
-      estado: true,
+      estado: true, // ACT
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -102,6 +112,7 @@ class ClienteService {
 
   /**
    * Actualizar un cliente existente
+   * F4.2: Solo clientes ACT pueden modificarse, cédula no modificable
    */
   async updateCliente(id: string, data: ClienteFormData): Promise<Cliente> {
     await simulateDelay();
@@ -110,18 +121,24 @@ class ClienteService {
     const clientes = getFromStorage<Cliente>(STORAGE_KEYS.CLIENTES);
     const index = clientes.findIndex(c => c.id_cliente === id);
     
+    // F4.2 E2: Cliente no encontrado
     if (index === -1) {
-      throw new Error('Cliente no encontrado');
+      throw new Error('El cliente especificado no existe.');
     }
     
-    // Validar cédula única (excluyendo el cliente actual)
-    if (clientes.some(c => c.cedula === data.cedula && c.id_cliente !== id)) {
-      throw new Error('Ya existe otro cliente con esa cédula');
+    // F4.2: Solo clientes ACT pueden modificarse
+    if (!clientes[index].estado) {
+      throw new Error('El cliente se encuentra deshabilitado y no puede modificarse.');
     }
     
+    // F4.2: Mantener cédula original (no modificable)
     clientes[index] = {
       ...clientes[index],
-      ...data,
+      nombres: data.nombres || clientes[index].nombres,
+      apellidos: data.apellidos || clientes[index].apellidos,
+      correo: data.correo ?? clientes[index].correo,
+      telefono: data.telefono ?? clientes[index].telefono,
+      direccion: data.direccion ?? clientes[index].direccion,
       updatedAt: new Date().toISOString(),
     };
     
@@ -130,8 +147,8 @@ class ClienteService {
   }
 
   /**
-   * Eliminar un cliente (ELIMINACIÓN LÓGICA - cambia estado a false)
-   * El cliente NO se elimina, solo se marca como inactivo
+   * Eliminar un cliente (ELIMINACIÓN LÓGICA - cambia estado a INA)
+   * F4.3: Cambio de estado ACT -> INA
    */
   async deleteCliente(id: string): Promise<void> {
     await simulateDelay();
@@ -140,11 +157,17 @@ class ClienteService {
     const clientes = getFromStorage<Cliente>(STORAGE_KEYS.CLIENTES);
     const index = clientes.findIndex(c => c.id_cliente === id);
     
+    // F4.3 E2: Cliente no encontrado
     if (index === -1) {
-      throw new Error('Cliente no encontrado');
+      throw new Error('El cliente no existe.');
     }
     
-    // ELIMINACIÓN LÓGICA: Solo cambiar estado a false
+    // F4.3 E3: Cliente ya inactivo
+    if (!clientes[index].estado) {
+      throw new Error('El cliente ya se encuentra deshabilitado.');
+    }
+    
+    // ELIMINACIÓN LÓGICA: Cambiar estado a INA (false)
     clientes[index].estado = false;
     clientes[index].updatedAt = new Date().toISOString();
     

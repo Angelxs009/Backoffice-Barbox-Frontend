@@ -27,6 +27,21 @@
   margin-top: 1rem;
 }
 
+/* Celda de acciones */
+.facturas-acciones-cell {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.text-muted {
+  color: var(--color-texto-secundario);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
 .factura-preview {
   display: flex;
   flex-direction: column;
