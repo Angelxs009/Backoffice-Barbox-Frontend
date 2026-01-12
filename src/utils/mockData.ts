@@ -6,7 +6,7 @@ import { Factura } from '../types/factura.types';
 export const MOCK_CLIENTES: Cliente[] = [
   {
     id_cliente: 'cli-001',
-    cedula: '0912345678',
+    cedula: '0912345675', // Cédula válida según algoritmo Módulo 10
     nombres: 'Juan Carlos',
     apellidos: 'Pérez García',
     correo: 'juan@email.com',
@@ -19,7 +19,7 @@ export const MOCK_CLIENTES: Cliente[] = [
   },
   {
     id_cliente: 'cli-002',
-    cedula: '0923456789',
+    cedula: '1723456784', // Cédula válida según algoritmo Módulo 10
     nombres: 'María Elena',
     apellidos: 'González López',
     correo: 'maria@email.com',
@@ -32,7 +32,7 @@ export const MOCK_CLIENTES: Cliente[] = [
   },
   {
     id_cliente: 'cli-003',
-    cedula: '0934567890',
+    cedula: '1710034065', // Cédula válida según algoritmo Módulo 10
     nombres: 'Roberto',
     apellidos: 'Martínez Vera',
     correo: 'roberto@email.com',
@@ -45,7 +45,7 @@ export const MOCK_CLIENTES: Cliente[] = [
   },
   {
     id_cliente: 'cli-004',
-    cedula: '0945678901',
+    cedula: '1803587680', // Cédula válida según algoritmo Módulo 10
     nombres: 'Ana Lucía',
     apellidos: 'Rodríguez Sánchez',
     correo: 'ana@email.com',
@@ -58,7 +58,7 @@ export const MOCK_CLIENTES: Cliente[] = [
   },
   {
     id_cliente: 'cli-005',
-    cedula: '0956789012',
+    cedula: '2400012346', // Cédula válida (provincia 24 - Galápagos)
     nombres: 'Carlos Eduardo',
     apellidos: 'Fernández Mora',
     correo: 'carlos@email.com',

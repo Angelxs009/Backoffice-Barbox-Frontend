@@ -10,6 +10,49 @@ import {
   initializeMockData,
 } from '../utils/mockData';
 
+/**
+ * Validar cédula ecuatoriana usando algoritmo Módulo 10
+ * @param cedula - Cédula a validar (10 dígitos)
+ * @returns true si es válida, false si no
+ */
+const validarCedulaEcuatoriana = (cedula: string): boolean => {
+  // Verificar que tenga 10 dígitos
+  if (cedula.length !== 10) return false;
+
+  // Verificar que sean solo números
+  if (!/^\d+$/.test(cedula)) return false;
+
+  // Verificar que los dos primeros dígitos correspondan a una provincia válida (01-24)
+  const provincia = parseInt(cedula.substring(0, 2));
+  if (provincia < 1 || provincia > 24) return false;
+
+  // Algoritmo Módulo 10
+  const digitoVerificador = parseInt(cedula.charAt(9));
+  let suma = 0;
+
+  for (let i = 0; i < 9; i++) {
+    let digito = parseInt(cedula.charAt(i));
+
+    // Los dígitos en posiciones impares (0,2,4,6,8) se multiplican por 2
+    if (i % 2 === 0) {
+      digito *= 2;
+      // Si el resultado es mayor a 9, se resta 9
+      if (digito > 9) digito -= 9;
+    }
+    // Los dígitos en posiciones pares (1,3,5,7) se dejan igual
+
+    suma += digito;
+  }
+
+  // Obtener el módulo 10 de la suma
+  const modulo = suma % 10;
+  
+  // El dígito verificador debe ser: si módulo es 0 -> 0, sino -> 10 - módulo
+  const digitoEsperado = modulo === 0 ? 0 : 10 - modulo;
+
+  return digitoVerificador === digitoEsperado;
+};
+
 // Inicializar datos mock si no existen
 const ensureDataExists = () => {
   const data = localStorage.getItem(STORAGE_KEYS.CLIENTES);
@@ -80,9 +123,9 @@ class ClienteService {
       throw new Error('Complete todos los campos requeridos.');
     }
     
-    // F4.1 E3: Validar formato de cédula (10 dígitos)
-    if (!/^\d{10}$/.test(data.cedula)) {
-      throw new Error('La cédula ingresada no es válida.');
+    // F4.1 E3: Validar cédula ecuatoriana con algoritmo Módulo 10
+    if (!validarCedulaEcuatoriana(data.cedula)) {
+      throw new Error('La cédula ingresada no es válida. Debe ser una cédula ecuatoriana de 10 dígitos.');
     }
     
     // F4.1 E2: Validar cédula única
