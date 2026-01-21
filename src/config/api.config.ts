@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/v1';
 
 const api = axios.create({
   baseURL,
@@ -9,6 +9,13 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Tipo para respuestas del backend
+export interface ApiResponse<T> {
+  status: 'success' | 'error';
+  message: string;
+  data: T;
+}
 
 // Request interceptor: agregar token de localStorage
 api.interceptors.request.use(
@@ -24,9 +31,13 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor: manejar errores 401
+// Response interceptor: manejar errores 401 y extraer data
 api.interceptors.response.use(
   (response) => {
+    // Si la respuesta tiene el formato {status, message, data}, extraer data
+    if (response.data && typeof response.data === 'object' && 'status' in response.data && 'data' in response.data) {
+      return { ...response, data: response.data.data };
+    }
     return response;
   },
   (error) => {
@@ -35,6 +46,10 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
+    }
+    // Extraer mensaje de error del formato del backend
+    if (error.response?.data?.message) {
+      error.message = error.response.data.message;
     }
     return Promise.reject(error);
   }

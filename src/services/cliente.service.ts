@@ -1,220 +1,118 @@
-/* Cliente Service - BARBOX Backoffice - SIMULACIÓN CON LOCALSTORAGE */
+/* Cliente Service - BARBOX Backoffice - INTEGRADO CON BACKEND */
 
 import { Cliente, ClienteFormData, ClienteFilters } from '../types/cliente.types';
-import {
-  STORAGE_KEYS,
-  getFromStorage,
-  saveToStorage,
-  generateId,
-  simulateDelay,
-  initializeMockData,
-} from '../utils/mockData';
+import api from '../config/api.config';
 
-/**
- * Validar cédula ecuatoriana usando algoritmo Módulo 10
- * @param cedula - Cédula a validar (10 dígitos)
- * @returns true si es válida, false si no
- */
-const validarCedulaEcuatoriana = (cedula: string): boolean => {
-  // Verificar que tenga 10 dígitos
-  if (cedula.length !== 10) return false;
+// Mapear datos del backend al formato del frontend
+function mapClienteFromBackend(backendCliente: any): Cliente {
+  return {
+    id_cliente: backendCliente.id_cliente?.toString() || '',
+    cedula: backendCliente.ruc_cedula || '',
+    nombres: [backendCliente.nombre1, backendCliente.nombre2].filter(Boolean).join(' '),
+    apellidos: [backendCliente.apellido1, backendCliente.apellido2].filter(Boolean).join(' '),
+    correo: backendCliente.email || '',
+    telefono: backendCliente.telefono || '',
+    direccion: backendCliente.direccion || '',
+    fecha_registro: backendCliente.fecha_creacion || new Date().toISOString(),
+    estado: backendCliente.estado === 'ACT',
+    createdAt: backendCliente.fecha_creacion || new Date().toISOString(),
+    updatedAt: backendCliente.fecha_actualizacion || new Date().toISOString(),
+  };
+}
 
-  // Verificar que sean solo números
-  if (!/^\d+$/.test(cedula)) return false;
-
-  // Verificar que los dos primeros dígitos correspondan a una provincia válida (01-24)
-  const provincia = parseInt(cedula.substring(0, 2));
-  if (provincia < 1 || provincia > 24) return false;
-
-  // Algoritmo Módulo 10
-  const digitoVerificador = parseInt(cedula.charAt(9));
-  let suma = 0;
-
-  for (let i = 0; i < 9; i++) {
-    let digito = parseInt(cedula.charAt(i));
-
-    // Los dígitos en posiciones impares (0,2,4,6,8) se multiplican por 2
-    if (i % 2 === 0) {
-      digito *= 2;
-      // Si el resultado es mayor a 9, se resta 9
-      if (digito > 9) digito -= 9;
-    }
-    // Los dígitos en posiciones pares (1,3,5,7) se dejan igual
-
-    suma += digito;
-  }
-
-  // Obtener el módulo 10 de la suma
-  const modulo = suma % 10;
+// Mapear datos del frontend al formato del backend
+function mapClienteToBackend(frontendCliente: any): any {
+  const backendData: any = {};
   
-  // El dígito verificador debe ser: si módulo es 0 -> 0, sino -> 10 - módulo
-  const digitoEsperado = modulo === 0 ? 0 : 10 - modulo;
-
-  return digitoVerificador === digitoEsperado;
-};
-
-// Inicializar datos mock si no existen
-const ensureDataExists = () => {
-  const data = localStorage.getItem(STORAGE_KEYS.CLIENTES);
-  if (!data || JSON.parse(data).length === 0) {
-    initializeMockData();
+  if (frontendCliente.cedula !== undefined) backendData.ruc_cedula = frontendCliente.cedula;
+  if (frontendCliente.correo !== undefined) backendData.email = frontendCliente.correo;
+  
+  // Separar nombres en nombre1 y nombre2
+  if (frontendCliente.nombres !== undefined) {
+    const nombres = frontendCliente.nombres.trim().split(/\s+/);
+    backendData.nombre1 = nombres[0] || '';
+    backendData.nombre2 = nombres.slice(1).join(' ') || '';
   }
-};
+  
+  // Separar apellidos en apellido1 y apellido2
+  if (frontendCliente.apellidos !== undefined) {
+    const apellidos = frontendCliente.apellidos.trim().split(/\s+/);
+    backendData.apellido1 = apellidos[0] || '';
+    backendData.apellido2 = apellidos.slice(1).join(' ') || '';
+  }
+  
+  if (frontendCliente.telefono !== undefined) backendData.telefono = frontendCliente.telefono;
+  if (frontendCliente.direccion !== undefined) backendData.direccion = frontendCliente.direccion;
+  if (frontendCliente.estado !== undefined) backendData.estado = frontendCliente.estado ? 'ACT' : 'INA';
+  
+  return backendData;
+}
 
 class ClienteService {
   /**
    * Obtener lista de clientes con filtros opcionales
-   * RETORNA TODOS (incluyendo inactivos) para mostrar estado
    */
   async getClientes(filters?: ClienteFilters): Promise<Cliente[]> {
-    await simulateDelay();
-    ensureDataExists();
-    
-    let clientes = getFromStorage<Cliente>(STORAGE_KEYS.CLIENTES);
-    
-    // Aplicar filtros
-    if (filters?.busqueda) {
-      const search = filters.busqueda.toLowerCase();
-      clientes = clientes.filter(c =>
-        c.nombres.toLowerCase().includes(search) ||
-        c.apellidos.toLowerCase().includes(search) ||
-        c.cedula.includes(search) ||
-        c.correo.toLowerCase().includes(search)
-      );
+    try {
+      const params: any = {};
+      
+      if (filters?.busqueda) params.busqueda = filters.busqueda;
+      if (filters?.estado !== undefined) params.estado = filters.estado ? 'ACT' : 'INA';
+      
+      const response = await api.get<any[]>('/clientes', { params });
+      return response.data.map(mapClienteFromBackend);
+    } catch (error: any) {
+      throw new Error(error?.message || 'Error al obtener clientes');
     }
-    
-    // Solo filtrar por estado si se especifica explícitamente
-    if (filters?.estado !== undefined) {
-      clientes = clientes.filter(c => c.estado === filters.estado);
-    }
-    
-    return clientes;
   }
 
   /**
    * Obtener un cliente por ID
    */
   async getClienteById(id: string): Promise<Cliente> {
-    await simulateDelay();
-    ensureDataExists();
-    
-    const clientes = getFromStorage<Cliente>(STORAGE_KEYS.CLIENTES);
-    const cliente = clientes.find(c => c.id_cliente === id);
-    
-    if (!cliente) {
-      throw new Error('Cliente no encontrado');
+    try {
+      const response = await api.get<any>(`/clientes/buscar?id=${id}`);
+      return mapClienteFromBackend(response.data);
+    } catch (error: any) {
+      throw new Error(error?.message || 'Cliente no encontrado');
     }
-    
-    return cliente;
   }
 
   /**
    * Crear un nuevo cliente
-   * F4.1: Validación de cédula única y campos obligatorios
    */
   async createCliente(data: ClienteFormData): Promise<Cliente> {
-    await simulateDelay();
-    ensureDataExists();
-    
-    const clientes = getFromStorage<Cliente>(STORAGE_KEYS.CLIENTES);
-    
-    // F4.1 E4: Validar campos obligatorios
-    if (!data.cedula || !data.nombres || !data.apellidos) {
-      throw new Error('Complete todos los campos requeridos.');
+    try {
+      const backendData = mapClienteToBackend(data);
+      const response = await api.post<any>('/clientes', backendData);
+      return mapClienteFromBackend(response.data);
+    } catch (error: any) {
+      throw new Error(error?.message || 'Error al crear cliente');
     }
-    
-    // F4.1 E3: Validar cédula ecuatoriana con algoritmo Módulo 10
-    if (!validarCedulaEcuatoriana(data.cedula)) {
-      throw new Error('La cédula ingresada no es válida. Debe ser una cédula ecuatoriana de 10 dígitos.');
-    }
-    
-    // F4.1 E2: Validar cédula única
-    if (clientes.some(c => c.cedula === data.cedula && c.estado === true)) {
-      throw new Error('La cédula ya está registrada.');
-    }
-    
-    const nuevoCliente: Cliente = {
-      id_cliente: generateId('cli'),
-      cedula: data.cedula,
-      nombres: data.nombres,
-      apellidos: data.apellidos,
-      correo: data.correo || '',
-      telefono: data.telefono || '',
-      direccion: data.direccion || '',
-      fecha_registro: new Date().toISOString().split('T')[0],
-      estado: true, // ACT
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    clientes.push(nuevoCliente);
-    saveToStorage(STORAGE_KEYS.CLIENTES, clientes);
-    
-    return nuevoCliente;
   }
 
   /**
    * Actualizar un cliente existente
-   * F4.2: Solo clientes ACT pueden modificarse, cédula no modificable
    */
-  async updateCliente(id: string, data: ClienteFormData): Promise<Cliente> {
-    await simulateDelay();
-    ensureDataExists();
-    
-    const clientes = getFromStorage<Cliente>(STORAGE_KEYS.CLIENTES);
-    const index = clientes.findIndex(c => c.id_cliente === id);
-    
-    // F4.2 E2: Cliente no encontrado
-    if (index === -1) {
-      throw new Error('El cliente especificado no existe.');
+  async updateCliente(id: string, data: Partial<ClienteFormData>): Promise<Cliente> {
+    try {
+      const backendData = mapClienteToBackend(data);
+      const response = await api.put<any>(`/clientes/${id}`, backendData);
+      return mapClienteFromBackend(response.data);
+    } catch (error: any) {
+      throw new Error(error?.message || 'Error al actualizar cliente');
     }
-    
-    // F4.2: Solo clientes ACT pueden modificarse
-    if (!clientes[index].estado) {
-      throw new Error('El cliente se encuentra deshabilitado y no puede modificarse.');
-    }
-    
-    // F4.2: Mantener cédula original (no modificable)
-    clientes[index] = {
-      ...clientes[index],
-      nombres: data.nombres || clientes[index].nombres,
-      apellidos: data.apellidos || clientes[index].apellidos,
-      correo: data.correo ?? clientes[index].correo,
-      telefono: data.telefono ?? clientes[index].telefono,
-      direccion: data.direccion ?? clientes[index].direccion,
-      updatedAt: new Date().toISOString(),
-    };
-    
-    saveToStorage(STORAGE_KEYS.CLIENTES, clientes);
-    return clientes[index];
   }
 
   /**
-   * Eliminar un cliente (ELIMINACIÓN LÓGICA - cambia estado a INA)
-   * F4.3: Cambio de estado ACT -> INA
+   * Eliminar un cliente (ELIMINACIÓN LÓGICA)
    */
   async deleteCliente(id: string): Promise<void> {
-    await simulateDelay();
-    ensureDataExists();
-    
-    const clientes = getFromStorage<Cliente>(STORAGE_KEYS.CLIENTES);
-    const index = clientes.findIndex(c => c.id_cliente === id);
-    
-    // F4.3 E2: Cliente no encontrado
-    if (index === -1) {
-      throw new Error('El cliente no existe.');
+    try {
+      await api.delete(`/clientes/${id}`);
+    } catch (error: any) {
+      throw new Error(error?.message || 'Error al eliminar cliente');
     }
-    
-    // F4.3 E3: Cliente ya inactivo
-    if (!clientes[index].estado) {
-      throw new Error('El cliente ya se encuentra deshabilitado.');
-    }
-    
-    // ELIMINACIÓN LÓGICA: Cambiar estado a INA (false)
-    clientes[index].estado = false;
-    clientes[index].updatedAt = new Date().toISOString();
-    
-    saveToStorage(STORAGE_KEYS.CLIENTES, clientes);
   }
 
   /**
@@ -228,21 +126,13 @@ class ClienteService {
    * Reactivar un cliente inactivo
    */
   async reactivarCliente(id: string): Promise<Cliente> {
-    await simulateDelay();
-    ensureDataExists();
-    
-    const clientes = getFromStorage<Cliente>(STORAGE_KEYS.CLIENTES);
-    const index = clientes.findIndex(c => c.id_cliente === id);
-    
-    if (index === -1) {
-      throw new Error('Cliente no encontrado');
+    try {
+      const response = await api.patch<any>(`/clientes/${id}/reactivar`);
+      return mapClienteFromBackend(response.data);
+    } catch (error: any) {
+      // Si el endpoint no existe, usar update estándar
+      return this.updateCliente(id, { estado: true } as any);
     }
-    
-    clientes[index].estado = true;
-    clientes[index].updatedAt = new Date().toISOString();
-    
-    saveToStorage(STORAGE_KEYS.CLIENTES, clientes);
-    return clientes[index];
   }
 }
 

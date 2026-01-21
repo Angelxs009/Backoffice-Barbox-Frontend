@@ -47,45 +47,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // Modo desarrollo: simular login sin backend
-      if (!process.env.REACT_APP_API_URL || process.env.REACT_APP_API_URL.includes('localhost')) {
-        // Validar email y contraseña locales
-        if (!email || !password) {
-          throw new Error('Email y contraseña son requeridos');
-        }
-        
-        // Crear usuario mock
-        const mockUser: User = {
-          id_usuario: '1',
-          nombres: email.split('@')[0],
-          apellidos: 'Usuario Demo',
-          correo: email,
-          rol: 'admin',
-          tipo_usuario: 'administrador',
-        };
-        
-        // Simular delay de red
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        localStorage.setItem('token', `mock-token-${Date.now()}`);
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setUser(mockUser);
-        return;
+      // Validar campos requeridos
+      if (!email || !password) {
+        throw new Error('Email y contraseña son requeridos');
       }
       
-      // Modo producción: usar API real
-      const response = await api.post<{ token: string; usuario: User }>('/auth/login', { email, password });
+      // Llamar al backend
+      const response = await api.post<{ token: string; usuario: User }>('/auth/login', { 
+        usuario: email,
+        password: password 
+      });
       
       const { token, usuario } = response.data;
       
-      // Almacenar token en localStorage
+      // Almacenar token y usuario en localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(usuario));
       
       setUser(usuario);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      throw error;
+      throw new Error(error?.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
